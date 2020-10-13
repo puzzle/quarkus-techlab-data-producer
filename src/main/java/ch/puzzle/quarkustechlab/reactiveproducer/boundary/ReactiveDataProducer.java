@@ -2,11 +2,13 @@ package ch.puzzle.quarkustechlab.reactiveproducer.boundary;
 
 import ch.puzzle.quarkustechlab.reactiveproducer.control.HeadersMapExtractAdapter;
 import ch.puzzle.quarkustechlab.restproducer.entity.SensorMeasurement;
+import io.jaegertracing.internal.JaegerTracer;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapInjectAdapter;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
+import org.eclipse.microprofile.opentracing.Traced;
 import org.eclipse.microprofile.reactive.messaging.*;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -39,6 +41,6 @@ public class ReactiveDataProducer {
         Message<SensorMeasurement> message = Message.of(measurement, Metadata.of(metadata));
         logger.info("Sending message with Jaeger Tracing Headers");
         emitter.send(message);
-        tracer.activeSpan().finish();
+        tracer.scopeManager().active().close();
     }
 }
