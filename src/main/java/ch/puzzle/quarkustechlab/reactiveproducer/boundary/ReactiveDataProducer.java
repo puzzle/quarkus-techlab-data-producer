@@ -27,7 +27,7 @@ public class ReactiveDataProducer {
     @Inject
     Tracer tracer;
 
-    @Scheduled(every = "2s")
+    @Scheduled(every = "30s")
     public void sendMessage() {
         SensorMeasurement measurement = new SensorMeasurement();
         HeadersMapExtractAdapter headersMapExtractAdapter = new HeadersMapExtractAdapter();
