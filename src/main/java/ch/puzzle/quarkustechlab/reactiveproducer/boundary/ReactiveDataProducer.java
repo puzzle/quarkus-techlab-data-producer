@@ -12,7 +12,7 @@ public class ReactiveDataProducer {
 
     @Outgoing("data")
     public Flowable<SensorMeasurement> generateStream() {
-        return Flowable.interval(5, TimeUnit.SECONDS)
+        return Flowable.interval(30, TimeUnit.SECONDS)
                 .map(tick -> new SensorMeasurement());
     }
 }
