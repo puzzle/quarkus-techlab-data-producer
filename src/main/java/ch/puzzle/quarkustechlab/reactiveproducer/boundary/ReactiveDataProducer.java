@@ -16,6 +16,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
+import java.util.Optional;
 
 @ApplicationScoped
 public class ReactiveDataProducer {
@@ -32,7 +33,7 @@ public class ReactiveDataProducer {
   Tracer tracer;
 
   @ConfigProperty(name = "quarkus.jaeger.enabled")
-  Boolean jaegerEnabled;
+  Optional<Boolean> jaegerEnabled;
 
   @Scheduled(every = "30s")
   @Traced
@@ -50,7 +51,7 @@ public class ReactiveDataProducer {
       Metadata.of(metadata)
     );
 
-    if (jaegerEnabled) {
+    if (jaegerEnabled.orElse(false)) {
       try (Scope scope = tracer.buildSpan("sendMessage").startActive(true)) {
         tracer.inject(
           scope.span().context(),
