@@ -32,7 +32,7 @@ public class ReactiveDataProducer {
   @Inject
   Tracer tracer;
 
-  @ConfigProperty(name = "quarkus.jaeger.enabled")
+  @ConfigProperty(name = "producer.jaeger.enabled")
   Optional<Boolean> jaegerEnabled;
 
   @Scheduled(every = "30s")
