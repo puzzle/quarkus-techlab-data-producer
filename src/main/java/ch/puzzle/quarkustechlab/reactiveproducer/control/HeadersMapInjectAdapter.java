@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class HeadersMapExtractAdapter implements TextMap {
+public class HeadersMapInjectAdapter implements TextMap {
 
     private final Map<String, String> map = new HashMap<>();
 
-    public HeadersMapExtractAdapter() {
+    public HeadersMapInjectAdapter() {
 
     }
 
-    public HeadersMapExtractAdapter(Headers headers) {
+    public HeadersMapInjectAdapter(Headers headers) {
         for (Header header : headers) {
             byte[] headerValue = header.value();
             map.put(header.key(),
@@ -48,4 +48,3 @@ public class HeadersMapExtractAdapter implements TextMap {
         return headers;
     }
 }
-
