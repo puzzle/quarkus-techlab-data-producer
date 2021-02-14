@@ -1,46 +1,53 @@
-name: master-publish
+name: bin-publish
 
 on:
-  push:
-    branches: 
-      - rest
-      - jaegerkafka
-  
-
+  create:
+    tags: 
+      - "*-rest"
 jobs:
   build:
     runs-on: ubuntu-latest
+    needs: create_release
     steps:
+      - name: Pull docker image
+        run: docker pull quay.io/quarkus/ubi-quarkus-native-image:20.0.0-java11
       - 
         name: Checkout
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Login to Quay.io Container Registry
-        uses: docker/login-action@v1 
+      - name: Build Native
+        uses: actions/setup-java@v1
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAYIO_USERNAME }}
-          password: ${{ secrets.QUAYIO_TOKEN }}
-      - name: Build and Push Latest Version
-        if: endsWith(github.ref, 'jaegerkafka')
-        uses: docker/build-push-action@v2
+          java-version: 11
+      - run: mvn package -Pnative -Dquarkus.package.output-name=application -Dquarkus.native.container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:20.1-java11
+      - run: mv target/application-runner target/application
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          context: .
-          file: src/main/docker/Dockerfile.multistage
-          push: true
-          tags: |
-            quay.io/puzzle/quarkus-techlab-data-producer:jaegerkafka
-      - name: Build and Push Latest Version
-        uses: docker/build-push-action@v2
-        if: endsWith(github.ref, 'rest')
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: target/application
+          asset_name: application
+          asset_content_type: application/octet-stream
+
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          context: .
-          file: src/main/docker/Dockerfile.multistage
-          push: true
-          tags: |
-            quay.io/puzzle/quarkus-techlab-data-producer:latest
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
