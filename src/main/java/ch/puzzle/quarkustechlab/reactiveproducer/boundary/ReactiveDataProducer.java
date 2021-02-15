@@ -39,17 +39,24 @@ public class ReactiveDataProducer {
     @Scheduled(every = "30s")
     @Traced
     public void sendMessage() {
-      SensorMeasurement measurement = new SensorMeasurement();
-      HeadersMapInjectAdapter headersMapInjectAdapter = new HeadersMapInjectAdapter();
-      try (Scope scope = tracer.buildSpan("data-produced").startActive(true)) {
-        tracer.inject(scope.span().context(), Format.Builtin.TEXT_MAP, headersMapInjectAdapter);
-        OutgoingKafkaRecordMetadata metadata = OutgoingKafkaRecordMetadata.<SensorMeasurement>builder()
-                .withKey(measurement)
-                .withTopic("manual")
-                .withHeaders(headersMapInjectAdapter.getRecordHeaders())
-                .build();
-        emitter.send(Message.of(measurement, Metadata.of(metadata)));
-        logger.info("Sending message with Jaeger Tracing Headers");
-      }
+        SensorMeasurement measurement = new SensorMeasurement();
+        HeadersMapInjectAdapter headersMapInjectAdapter = new HeadersMapInjectAdapter();
+        try (Scope scope = tracer.buildSpan("data-produced").startActive(true)) {
+            tracer.inject(scope.span().context(), Format.Builtin.TEXT_MAP, headersMapInjectAdapter);
+            OutgoingKafkaRecordMetadata metadata;
+            OutgoingKafkaRecordMetadata.OutgoingKafkaRecordMetadataBuilder builder = OutgoingKafkaRecordMetadata.<SensorMeasurement>builder()
+                    .withKey(measurement)
+                    .withTopic("manual");
+            if (jaegerEnabled.orElse(false)) {
+                metadata = builder.build();
+                logger.info("Sending message");
+            } else {
+                metadata = builder.withHeaders(headersMapInjectAdapter.getRecordHeaders())
+                        .build();
+                logger.info("Sending message with Jaeger Tracing Headers");
+            }
+            emitter.send(Message.of(measurement, Metadata.of(metadata)));
+
+        }
     }
 }
