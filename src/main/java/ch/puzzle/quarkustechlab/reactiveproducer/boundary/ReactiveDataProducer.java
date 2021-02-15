@@ -48,12 +48,12 @@ public class ReactiveDataProducer {
                     .withKey(measurement)
                     .withTopic("manual");
             if (jaegerEnabled.orElse(false)) {
-                metadata = builder.build();
-                logger.info("Sending message");
-            } else {
                 metadata = builder.withHeaders(headersMapInjectAdapter.getRecordHeaders())
                         .build();
                 logger.info("Sending message with Jaeger Tracing Headers");
+            } else {
+                metadata = builder.build();
+                logger.info("Sending message");
             }
             emitter.send(Message.of(measurement, Metadata.of(metadata)));
 
