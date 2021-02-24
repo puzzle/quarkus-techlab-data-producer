@@ -8,6 +8,9 @@ import io.opentracing.propagation.Format;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.metrics.MetricUnits;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Gauge;
 import org.eclipse.microprofile.opentracing.Traced;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
@@ -21,6 +24,8 @@ import java.util.logging.Logger;
 
 @ApplicationScoped
 public class ReactiveDataProducer {
+
+    private long producedMessages = 0;
 
     private final Logger logger = Logger.getLogger(
             ReactiveDataProducer.class.getName()
@@ -37,6 +42,7 @@ public class ReactiveDataProducer {
     Optional<Boolean> jaegerEnabled;
 
     @Scheduled(every = "30s")
+    @Counted(name = "producedMessages", unit = MetricUnits.NONE, description = "created messages by producer")
     @Traced
     public void sendMessage() {
         SensorMeasurement measurement = new SensorMeasurement();
@@ -56,7 +62,10 @@ public class ReactiveDataProducer {
                 logger.info("Sending message");
             }
             emitter.send(Message.of(measurement, Metadata.of(metadata)));
+            producedMessages++;
 
         }
     }
+
+   
 }
